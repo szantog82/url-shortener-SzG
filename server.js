@@ -14,6 +14,7 @@ var shortened = "https://urlshortener-szg.herokuapp.com/";
 var existingid = []; //for checking the existing id-s
 var repeat; //for checking the existing id-s
 
+
 var server = http.createServer(function(req, res) {
     var currpath = JSON.stringify(url.parse(req.url).path);
     var input = decodeURIComponent(currpath.slice(2, currpath.length -
@@ -46,16 +47,19 @@ var server = http.createServer(function(req, res) {
                   res.write("This shortened url does not yet exist");
                   res.end();
                   db.close();
-                }
+                        }
                 else {                                            //The number already exists
                 entrypage = JSON.stringify(data[0].page);
-                opn("http://www.google.com",'browser');
+              opn('http://www.google.com', function(){
+                
                 res.end();
-                }
-            })
-
-            db.close();
-        })
+              db.close();
+              });
+              
+              }
+        });
+        });
+        
         
     } else if (/^new\/\?http:\/\//.test(input) || /^new\/\?https:\/\//.test(input)) { //when address is supplied
         existingid = [];                                                              //to reset this variable
