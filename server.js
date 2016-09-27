@@ -5,8 +5,7 @@ var url = require("url");
 var app = express();
 var fs = require("fs");
 var output; //if output happens, JSON output will be in this variable
-var uri = 'mongodb://' + process.env.USER + ':' + process.env.PASS + '@' +
-    process.env.HOST + ':' + process.env.MONGOPORT + '/' + process.env.DB;
+var uri = 'mongodb://mongodb:fcc007@ds033966.mlab.com:33966/szantog82';
 var entryid;
 var entrypage;
 var shortened = "https://urlshortener-szg.herokuapp.com/";
