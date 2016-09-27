@@ -1,5 +1,6 @@
 var express = require('express');
 var mongodb = require('mongodb');
+var opn = require('opn');
 var http = require("http");
 var url = require("url");
 var app = express();
@@ -9,7 +10,7 @@ var uri = 'mongodb://' + process.env.USER + ':' + process.env.PASS + '@' +
     process.env.HOST + ':' + process.env.MONGOPORT + '/' + process.env.DB;
 var entryid;
 var entrypage;
-var shortened = "http://";
+var shortened = "https://urlshortener-szg.herokuapp.com/";
 var existingid = []; //for checking the existing id-s
 var repeat; //for checking the existing id-s
 
@@ -41,10 +42,16 @@ var server = http.createServer(function(req, res) {
             shorten.find({
                 _id: entryid
             }).toArray(function(err, data) {
-                //output = JSON.stringify(data);
+                if (JSON.stringify(data).length < 3) {            //The number does not exist
+                  res.write("This shortened url does not yet exist");
+                  res.end();
+                  db.close();
+                }
+                else {                                            //The number already exists
                 entrypage = JSON.stringify(data[0].page);
-                res.write(entrypage);
+                opn("http://www.google.com",'browser');
                 res.end();
+                }
             })
 
             db.close();
