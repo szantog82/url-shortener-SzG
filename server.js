@@ -15,7 +15,7 @@ res.writeHeader(200, {"Content-Type": "text/html"});
 })
 
 
-server.listen(process.env.PORT || 8888)
+server.listen(process.env.PORTT || 8888)
 
 
 
