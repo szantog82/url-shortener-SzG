@@ -4,19 +4,21 @@ var http = require("http");
 var url = require("url");
 var app = express();
 var fs = require("fs");
-var output;
+var output; //if output happens, JSON output will be in this variable
 var uri = 'mongodb://' + process.env.USER + ':' + process.env.PASS + '@' +
     process.env.HOST + ':' + process.env.MONGOPORT + '/' + process.env.DB;
 var entryid;
 var entrypage;
 var shortened = "http://";
+var existingid = []; //for checking the existing id-s
+var repeat; //for checking the existing id-s
 
 var server = http.createServer(function(req, res) {
     var currpath = JSON.stringify(url.parse(req.url).path);
     var input = decodeURIComponent(currpath.slice(2, currpath.length -
         1));
 
-    if (currpath.length < 4) {
+      if (currpath.length < 4) {
         fs.readFile('./index.html', function(err, html) {
             if (err) {
                 throw err;
@@ -27,8 +29,8 @@ var server = http.createServer(function(req, res) {
             res.write(html);
             res.end();
         })
-        
-    } else if (/[0-9]/.test(input)) {
+      
+    } else if (/[0-9]/.test(input)) {                           //when number (shortened url) is supplied
         res.writeHeader(200, {
             "Content-Type": "text/html"
         });
@@ -37,8 +39,7 @@ var server = http.createServer(function(req, res) {
             if (err) throw err;
             var shorten = db.collection('shortened');
             shorten.find({
-                //_id: entryid
-                _id: 1
+                _id: entryid
             }).toArray(function(err, data) {
                 //output = JSON.stringify(data);
                 entrypage = JSON.stringify(data[0].page);
@@ -49,7 +50,8 @@ var server = http.createServer(function(req, res) {
             db.close();
         })
         
-    } else if (/^new\/\?http:\/\//.test(input) || /^new\/\?https:\/\//.test(input)) {
+    } else if (/^new\/\?http:\/\//.test(input) || /^new\/\?https:\/\//.test(input)) { //when address is supplied
+        existingid = [];                                                              //to reset this variable
         entrypage = input.slice(5, input.length);
         mongodb.MongoClient.connect(uri, function(err, db) {
             if (err) throw err;
@@ -57,8 +59,19 @@ var server = http.createServer(function(req, res) {
             shorten.find({
                 page: entrypage
             }).toArray(function(err, data) {
-                if (JSON.stringify(data).length < 3) {
-                    entryid = Math.floor(Math.random() * 1000);
+                if (JSON.stringify(data).length < 3) {              //when address is supplied, and it does not exist in the db
+                    
+                    shorten.find().forEach(function(myDoc){
+                    existingid.push(myDoc["_id"])
+                    })
+                    
+                    do{ repeat = false;
+                        entryid = Math.floor(Math.random() * 1000);
+                        for (var i = 0; i < entryid.length; i++) {
+                        if (entryid === existingid[i]) repeat = true;
+                        }
+                    } while (repeat);
+                    
                     shorten.insert({
                         "_id": entryid,
                         "page": entrypage
@@ -71,7 +84,7 @@ var server = http.createServer(function(req, res) {
                     res.end();
                     db.close();
 
-                } else {
+                } else {                                          //when address is supplied, and it exists in the db
                     entryid = JSON.stringify(data[0]._id);
                     output = {
                         "original_url": entrypage,
@@ -82,28 +95,10 @@ var server = http.createServer(function(req, res) {
                     res.end();
                     db.close();
                 }
-
-
-                /*entryid =  parseInt(JSON.stringify(data[0]._id));
-                      if (Number.isInteger(entryid)){
-                            res.write(entryid.toString());
-                            res.end();
-                      }
-                      else {
-                        res.write("nem nyert");
-                            res.end();
-                      }*/
             })
         })
 
-
-        /*   entryid = Math.floor(Math.random()*100);
-        output = {"original url": entrypage,
-                  "short url": entryid
-                }
-        res.write(JSON.stringify(output));
-         res.end()*/
-    } else {
+    } else {                                                      //when input is not correct
         res.write("Bad format or not existing id. Try again!")
         res.end()
     }
