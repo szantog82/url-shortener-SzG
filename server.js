@@ -1,6 +1,5 @@
 var express = require('express');
 var mongodb = require('mongodb');
-var opn = require('opn');
 var http = require("http");
 var url = require("url");
 var app = express();
@@ -48,15 +47,15 @@ var server = http.createServer(function(req, res) {
                   res.end();
                   db.close();
                         }
-                else {                                            //The number already exists
-                entrypage = JSON.stringify(data[0].page);
-              opn('http://www.google.com', function(){
                 
-                res.end();
-              db.close();
-              });
-              
-              }
+                else {                                            //The number already exists
+                entrypage = data[0].page;
+                db.close();
+                res.writeHead(302, {
+                    'Location': entrypage
+                });
+                res.end()
+          }
         });
         });
         
